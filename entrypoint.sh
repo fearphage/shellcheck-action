@@ -46,7 +46,6 @@ request() {
 
   >&2 echo "DEBUG: \$url = $url ; \$method = $method ; \$suffix = $suffix"
 
-  exit 0
   curl --location --show-error \
     --request "$method" \
     --header 'Accept: application/vnd.github.antiope-preview+json' \
@@ -84,7 +83,6 @@ main() {
   >&2 echo "DEBUG: \$response <> $response"
 
   >&2 echo "DEBUG: before id"
-  exit 0
   id=$(echo "$response" | jq --raw-output .id)
 
   >&2 echo "DEBUG: response: $response / json: $json / id: $id"
@@ -94,7 +92,6 @@ main() {
   fi
 
   >&2 echo "DEBUG: before run_shellcheck"
-  exit 0
 
   results=$(run_shellcheck)
   >&2 echo "DEBUG: $results => $results"
