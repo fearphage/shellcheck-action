@@ -44,15 +44,16 @@ request() {
     suffix=''
   fi
 
-  >&2 echo "DEBUG: \$url = $url ; \$method = $method ; \$suffix = $suffix"
+  >&2 echo "DEBUG: \$1 = $1 ; \$method = $method ; \$suffix = $suffix"
 
   curl --location --show-error \
     --request "$method" \
     --header 'Accept: application/vnd.github.antiope-preview+json' \
     --header "Authorization: token ${GITHUB_TOKEN}" \
     --header 'Content-Type: application/json' \
+    --header 'User-Agent: github-actions' \
     --data "$2" \
-    "${1}/check-runs${suffix}" 2>&1
+    "${1}/check-runs${suffix}"
 }
 
 run_shellcheck() {
