@@ -49,7 +49,7 @@ request() {
   curl \
     --location \
     --show-error \
-    --slient \
+    --silent \
     --output /dev/null \
     --write-out '%{http_code}' \
     --request "$method" \
