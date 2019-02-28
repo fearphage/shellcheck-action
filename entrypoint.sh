@@ -34,6 +34,7 @@ parse_json() {
 
 request() {
   local method
+  local output
   local suffix
 
   if [ -n "$3" ]; then
@@ -46,7 +47,7 @@ request() {
 
   >&2 echo "DEBUG: \$1 = $1 ; \$method = $method ; \$suffix = $suffix"
 
-  curl \
+  output=$(curl \
     --location \
     --show-error \
     --silent \
@@ -59,6 +60,11 @@ request() {
     --header 'User-Agent: github-actions' \
     --data "$2" \
     "${1}/check-runs${suffix}"
+  )
+
+  >&2 echo "\$output = $output"
+  exit 1
+  echo "$output"
 }
 
 run_shellcheck() {
