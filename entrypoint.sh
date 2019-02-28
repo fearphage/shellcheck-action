@@ -46,7 +46,7 @@ request() {
 
   >&2 echo "DEBUG: \$1 = $1 ; \$method = $method ; \$suffix = $suffix"
 
-  curl --location --show-error \
+  echo curl --location --show-error \
     --request "$method" \
     --header 'Accept: application/vnd.github.antiope-preview+json' \
     --header "Authorization: token ${GITHUB_TOKEN}" \
@@ -70,7 +70,7 @@ timestamp() {
 }
 
 main() {
-  jq . "$GITHUB_EVENT_PATH"
+  # jq . "$GITHUB_EVENT_PATH"
 
   url="https://api.github.com/repos/$(jq --raw-output .repository.full_name "$GITHUB_EVENT_PATH")"
   >&2 echo "DEBUG: \$GITHUB_ACTION = $GITHUB_ACTION ; \$GITHUB_SHA = $GITHUB_SHA ; \$url = $url"
@@ -85,6 +85,7 @@ main() {
 
   >&2 echo "DEBUG: before id"
   id=$(echo "$response" | jq --raw-output .id)
+  echo 1
 
   >&2 echo "DEBUG: response: $response / json: $json / id: $id"
 
