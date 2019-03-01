@@ -48,6 +48,7 @@ request() {
 
   curl \
     --location \
+    --show-error \
     --silent \
     --connect-timeout 5 \
     --max-time 5 \
@@ -78,6 +79,7 @@ timestamp() {
 main() {
   local id
   local json
+  local response
   local results
   local url
 
@@ -86,7 +88,9 @@ main() {
   json='{"name":"'"${GITHUB_ACTION}"'","status":"in_progress","started_at":"'"$(timestamp)"'","head_sha":"'"${GITHUB_SHA}"'"}'
 
   # start check
-  id=$(request "$url" "$json" | jq --raw-output .id)
+  response="$(request "$url" "$json")"
+
+  id=$(echo "$response" | jq --raw-output .id)
 
   if [ -z "$id" ] || [ "$id" = "null" ]; then
     exit 78
@@ -95,10 +99,14 @@ main() {
   results=$(run_shellcheck)
 
   # no results is good news
-  if [ "$(jq --raw-output length "$results")" -gt 0 ]; then
-    # update check with results
-    request "$url" "$(echo "$results" | parse_json)" "$id"
+  if [ "$(jq --raw-output length "$results")" -eq 0 ]; then
+    exit 0
   fi
+
+  json=$(echo "$results" | parse_json)
+
+  # update check with results
+  request "$url" "$json" "$id"
 }
 
 main "$@"
