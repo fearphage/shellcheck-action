@@ -18,7 +18,7 @@ parse_json() {
     conclusion: (if map(select(.level == "error")) | length > 0 then "failure" else "success" end),
     output: {
       title: $name,
-      summary: map({level: .level}) | group_by(.level) | map({key: .[0].level, value: length}) | from_entries | "\(.error // 0) error(s) / \(.warning // 0) warning(s) / \(.info // 0) messages",
+      summary: map({level: .level}) | group_by(.level) | map({key: .[0].level, value: length}) | from_entries | "\(.error // 0) error(s) / \(.warning // 0) warning(s) / \(.info // 0) message(s)",
       annotations: map({
         path: .file,
         start_line: .line,
@@ -80,7 +80,6 @@ main() {
   local id
   local json
   local response
-  local results
   local url
 
   # github doesn't provide this URL so we have to create it
@@ -96,14 +95,7 @@ main() {
     exit 78
   fi
 
-  results=$(run_shellcheck)
-
-  # no results is good news
-  if [ "$(jq --raw-output length "$results")" -eq 0 ]; then
-    exit 0
-  fi
-
-  json=$(echo "$results" | parse_json)
+  json=$(run_shellcheck | parse_json)
 
   # update check with results
   request "$url" "$json" "$id"
