@@ -12,6 +12,12 @@ if [ -z "$GITHUB_SHA" ]; then
 	exit 1
 fi
 
+debug() {
+  if [ -n "$DEBUG_ACTION" ]; then
+    >&2 echo "DEBUG: $1"
+  fi
+}
+
 parse_json() {
   jq --arg name "$GITHUB_ACTION" --arg now "$(timestamp)" '{
     completed_at: $now,
@@ -80,6 +86,7 @@ main() {
   local id
   local json
   local response
+  local results
   local url
 
   # github doesn't provide this URL so we have to create it
@@ -95,10 +102,21 @@ main() {
     exit 78
   fi
 
-  json=$(run_shellcheck | parse_json)
+  results="$(run_shellcheck)"
+
+  debug "shellcheck results => $results"
+
+  json=$(echo "$results" | parse_json)
+
+  debug "final json => $json"
 
   # update check with results
   request "$url" "$json" "$id"
+
+  # failure means errors occurred (warnings are ignored)
+  if [ "$(echo "$json" | jq --raw-output .conclusion)" = "failure" ]; then
+    exit 1
+  fi
 }
 
 main "$@"
