@@ -13,7 +13,7 @@ if [ -z "$GITHUB_SHA" ]; then
 fi
 
 parse_json() {
-  jq --arg name "$GITHUB_ACTION" --arg now "$(timestamp)" '{
+  echo "$1" | jq --arg name "$GITHUB_ACTION" --arg now "$(timestamp)" '{
     completed_at: $now,
     conclusion: (if map(select(.level == "error")) | length > 0 then "failure" else "success" end),
     output: {
@@ -29,7 +29,7 @@ parse_json() {
         message: .message
       })
     }
-  }' "$1"
+  }'
 }
 
 request() {
@@ -48,7 +48,6 @@ request() {
 
   curl \
     --location \
-    --show-error \
     --silent \
     --connect-timeout 5 \
     --max-time 5 \
@@ -58,15 +57,17 @@ request() {
     --header 'Content-Type: application/json' \
     --header 'User-Agent: github-actions' \
     --data "$2" \
-    "${1}/check-runs${suffix}"
+    "${1}/check-runs${suffix}" 2> /dev/null
 }
 
 run_shellcheck() {
   (find . -type f -name "*.sh" -exec "shellcheck" "--format=json" {} \;
 
-  # shellcheck disable=SC2013
-  for file in $(grep -IRl "#\!\(/usr/bin/env \|/bin/\)sh" --exclude-dir ".git" --exclude-dir "node_modules" --exclude "*.txt" --exclude "*.sh"); do
-    shellcheck --format=json --shell=sh "$file"
+  for ext in bash sh; do
+    # shellcheck disable=SC2013
+    for file in $(grep -il "#\!\(/usr/bin/env \|/bin/\)$ext" --exclude-dir ".git" --exclude-dir "node_modules" --exclude "*.txt" --exclude "*.sh"); do
+      shellcheck --format=json --shell=$ext "$file"
+    done
   done) | jq --slurp flatten
 }
 
