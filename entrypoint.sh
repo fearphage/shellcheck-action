@@ -50,8 +50,6 @@ request() {
     suffix=''
   fi
 
-  >&2 echo "DEBUG: \$1 = $1 ; \$method = $method ; \$suffix = $suffix"
-
   curl \
     --location \
     --show-error \
@@ -72,7 +70,7 @@ run_shellcheck() {
 
   for ext in bash sh; do
     # shellcheck disable=SC2013
-    for file in $(grep -il "#\!\(/usr/bin/env \|/bin/\)$ext" --exclude-dir ".git" --exclude-dir "node_modules" --exclude "*.txt" --exclude "*.sh"); do
+    for file in $(grep -iRl "#\!\(/usr/bin/env \|/bin/\)$ext" --exclude-dir ".git" --exclude-dir "node_modules" --exclude "*.txt" --exclude "*.sh"); do
       shellcheck --format=json --shell=$ext "$file"
     done
   done) | jq --slurp flatten
