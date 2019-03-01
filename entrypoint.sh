@@ -34,7 +34,6 @@ parse_json() {
 
 request() {
   local method
-  local output
   local suffix
 
   if [ -n "$3" ]; then
@@ -47,12 +46,12 @@ request() {
 
   >&2 echo "DEBUG: \$1 = $1 ; \$method = $method ; \$suffix = $suffix"
 
-  output=$(curl \
+  curl \
     --location \
     --show-error \
     --silent \
-    --output /dev/null \
-    --write-out '%{http_code}' \
+    --connect-timeout 5 \
+    --max-time 5 \
     --request "$method" \
     --header 'Accept: application/vnd.github.antiope-preview+json' \
     --header "Authorization: token ${GITHUB_TOKEN}" \
@@ -60,11 +59,6 @@ request() {
     --header 'User-Agent: github-actions' \
     --data "$2" \
     "${1}/check-runs${suffix}"
-  )
-
-  >&2 echo "\$output = $output"
-  exit 1
-  echo "$output"
 }
 
 run_shellcheck() {
