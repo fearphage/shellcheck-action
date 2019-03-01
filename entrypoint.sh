@@ -13,7 +13,7 @@ if [ -z "$GITHUB_SHA" ]; then
 fi
 
 parse_json() {
-  echo "$1" | jq --arg name "$GITHUB_ACTION" --arg now "$(timestamp)" '{
+  jq --arg name "$GITHUB_ACTION" --arg now "$(timestamp)" '{
     completed_at: $now,
     conclusion: (if map(select(.level == "error")) | length > 0 then "failure" else "success" end),
     output: {
@@ -76,41 +76,29 @@ timestamp() {
 }
 
 main() {
-  # jq . "$GITHUB_EVENT_PATH"
+  local id
+  local json
+  local results
+  local url
 
+  # github doesn't provide this URL so we have to create it
   url="https://api.github.com/repos/$(jq --raw-output .repository.full_name "$GITHUB_EVENT_PATH")"
-  >&2 echo "DEBUG: \$GITHUB_ACTION = $GITHUB_ACTION ; \$GITHUB_SHA = $GITHUB_SHA ; \$url = $url"
-
   json='{"name":"'"${GITHUB_ACTION}"'","status":"in_progress","started_at":"'"$(timestamp)"'","head_sha":"'"${GITHUB_SHA}"'"}'
 
-  >&2 echo "DEBUG: \$json => $json"
-
   # start check
-  response="$(request "$url" "$json")"
-  >&2 echo "DEBUG: \$response <> $response"
-
-  >&2 echo "DEBUG: before id"
-  id=$(echo "$response" | jq --raw-output .id)
-  echo 1
-
-  >&2 echo "DEBUG: response: $response / json: $json / id: $id"
+  id=$(request "$url" "$json" | jq --raw-output .id)
 
   if [ -z "$id" ] || [ "$id" = "null" ]; then
     exit 78
   fi
 
-  >&2 echo "DEBUG: before run_shellcheck"
-
   results=$(run_shellcheck)
-  >&2 echo "DEBUG: $results => $results"
-  if [ "$(jq --raw-output length "$results")" -eq 0 ]; then
-    exit 0
-  fi
 
-  json=$(parse_json "$results")
-  >&2 echo "DEBUG: pre-patch json => $json"
-  response=$(request "$url" "$json" "$id")
-  >&2 echo "DEBUG: response $response"
+  # no results is good news
+  if [ "$(jq --raw-output length "$results")" -gt 0 ]; then
+    # update check with results
+    request "$url" "$(echo "$results" | parse_json)" "$id"
+  fi
 }
 
 main "$@"
