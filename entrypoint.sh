@@ -69,8 +69,7 @@ run_shellcheck() {
   (find . -type f -name "*.sh" -exec "shellcheck" "--format=json" {} \;
 
   for ext in bash sh; do
-    # shellcheck disable=SC2013
-    for file in $(grep -iRl "#\!\(/usr/bin/env \|/bin/\)$ext" --exclude-dir ".git" --exclude-dir "node_modules" --exclude "*.txt" --exclude "*.sh"); do
+    grep -iRl "#\!\(/usr/bin/env \|/bin/\)$ext" --exclude-dir ".git" --exclude-dir "node_modules" --exclude "*.txt" --exclude "*.sh" | while read -r file; do
       shellcheck --format=json --shell=$ext "$file"
     done
   done) | jq --slurp flatten
