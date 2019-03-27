@@ -95,6 +95,7 @@ main() {
 
   debug "checks api response => $response"
 
+  exit 0
   id=$(echo "$response" | jq --raw-output .id)
 
   if [ -z "$id" ] || [ "$id" = "null" ]; then
