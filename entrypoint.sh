@@ -93,6 +93,8 @@ main() {
   # start check
   response="$(request "$url" "$json")"
 
+  debug "checks api response => $response"
+
   id=$(echo "$response" | jq --raw-output .id)
 
   if [ -z "$id" ] || [ "$id" = "null" ]; then
