@@ -1,4 +1,4 @@
-# Shellechk Action
+# Shellcheck Action
 
 ## Acknowledgements:
 
