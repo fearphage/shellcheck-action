@@ -1,0 +1,9 @@
+me: ShellCheck
+author: fearphage <fearphage+shellcheck-action@gmail.com
+description: Check shell scripts using shellcheck
+runs:
+  using: docker
+  image: Dockerfile
+branding:
+  icon: code
+  color: red
