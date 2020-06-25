@@ -62,7 +62,16 @@ request() {
 }
 
 run_shellcheck() {
-  (find . -type f -name "*.sh" -exec "shellcheck" "--format=json" {} \;
+  (find . -type f \
+    -name "*.sh" -o \
+    -name ".bash*" -o \
+    -name ".ksh*" -o \
+    -name ".profile*" -o \
+    -name ".zlogin*" -o \
+    -name ".zlogout*" -o \
+    -name ".zprofile*" -o \
+    -name ".zsh*" \
+    -exec "shellcheck" "--format=json" {} \;
 
   for ext in bash sh; do
     # shellcheck disable=SC2013
