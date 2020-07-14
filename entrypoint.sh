@@ -20,7 +20,7 @@ parse_json() {
       title: $name,
       summary: map({level: .level}) | group_by(.level) | map({key: .[0].level, value: length}) | from_entries | "\(.error // 0) error(s) / \(.warning // 0) warning(s) / \(.info // 0) message(s)",
       annotations: map({
-        path: .file,
+        path: (if .file | startswith("./") then .file[2:] else .file end),
         start_line: .line,
         end_line: .endLine,
         start_column: .column,
@@ -98,7 +98,7 @@ main() {
   # start check
   response="$(request "$url" "$json")"
 
-  id=$(echo "$response" | jq --raw-output .id)
+  id=$(jq --raw-output .id <<< "$response")
 
   if [ -z "$id" ] || [ "$id" = "null" ]; then
     exit 78
@@ -113,6 +113,12 @@ main() {
 
   # update check with results
   request "$url" "$json" "$id"
+
+  >&2 echo "DEBUG: conclusion = $(jq --raw-output .conclusion <<< "$json")"
+
+  if [ "$(jq --raw-output .conclusion <<< "$json")" = "failure" ]; then
+    exit 1
+  fi
 }
 
 main "$@"
