@@ -44,7 +44,7 @@ request() {
     suffix=''
   fi
 
-  >&2 echo "DEBUG: \$1 = $1 ; \$method = $method ; \$suffix = $suffix"
+  >&2 echo "DEBUG: \$1 = $1 ; \$method = $method ; \$suffix = $suffix ; \$data = $2"
 
   curl \
     --location \
@@ -104,7 +104,7 @@ main() {
     exit 78
   fi
 
-  json=$(run_shellcheck | parse_json)
+  json="$(run_shellcheck | parse_json)"
 
   # update check with results
   request "$url" "$json" "$id"
