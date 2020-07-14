@@ -9,6 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: ShellCheck Action
-        uses: fearphage/shellcheck-action
+        uses: fearphage/shellcheck-action@master
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
