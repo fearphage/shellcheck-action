@@ -104,7 +104,12 @@ main() {
     exit 78
   fi
 
+  output="$(run_shellcheck)"
+
   json="$(run_shellcheck | parse_json)"
+
+  >&2 echo "DEBUG: \$output = $output"
+  >&2 echo "DEBUG: \$json = $json"
 
   # update check with results
   request "$url" "$json" "$id"
