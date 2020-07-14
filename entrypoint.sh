@@ -14,7 +14,7 @@ fi
 
 debug() {
   if [ "$DEBUG_ACTION" = "true" ]; then
-    >&2 echo "DEBUG: $@"
+    >&2 echo "DEBUG: $*"
   fi
 }
 
