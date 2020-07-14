@@ -73,9 +73,9 @@ run_shellcheck() {
     -name ".zsh*" \
     -exec "shellcheck" "--format=json" {} \;
 
-  for ext in bash sh; do
+  for ext in bash sh zsh; do
     # shellcheck disable=SC2013
-    for file in $(grep -il "#\!\(/usr/bin/env \|/bin/\)$ext" --exclude-dir ".git" --exclude-dir "node_modules" --exclude "*.txt" --exclude "*.sh"); do
+    for file in $(grep -ilr "#\!\(/usr/bin/env \|/bin/\)$ext" --exclude-dir ".git" --exclude-dir "node_modules" --exclude "*.txt" --exclude "*.sh" .); do
       shellcheck --format=json --shell=$ext "$file"
     done
   done) | jq --slurp flatten
