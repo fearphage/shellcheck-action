@@ -25,7 +25,7 @@ parse_json() {
         end_line: .endLine,
         start_column: .column,
         end_column: .endColumn,
-        annotation_level: (if .level == "info" then "notice" elif .level == "error" then "failure" else .level end),
+        annotation_level: (if .level == "info" or .level == "style" then "notice" elif .level == "error" then "failure" else .level end),
         message: .message
       })
     }
