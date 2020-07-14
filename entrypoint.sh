@@ -12,6 +12,12 @@ if [ -z "$GITHUB_SHA" ]; then
 	exit 1
 fi
 
+debug() {
+  if [ "$DEBUG_ACTION" = "true" ]; then
+    >&2 echo "DEBUG: $*"
+  fi
+}
+
 parse_json() {
   jq --arg name "$GITHUB_ACTION" --arg now "$(timestamp)" '{
     completed_at: $now,
@@ -20,14 +26,12 @@ parse_json() {
       title: $name,
       summary: map({level: .level}) | group_by(.level) | map({key: .[0].level, value: length}) | from_entries | "\(.error // 0) error(s) / \(.warning // 0) warning(s) / \(.info // 0) message(s)",
       annotations: map({
-        path: .file,
+        path: (if .file | startswith("./") then .file[2:] else .file end),
         start_line: .line,
         end_line: .endLine,
-        start_column: .column,
-        end_column: .endColumn,
-        annotation_level: (if .level == "info" then "notice" elif .level == "error" then "failure" else .level end),
+        annotation_level: (if .level == "info" or .level == "style" then "notice" elif .level == "error" then "failure" else .level end),
         message: .message
-      })
+      } + (if .line == .endLine then {start_column: .column, end_column: .endColumn} else {} end))
     }
   }'
 }
@@ -44,7 +48,7 @@ request() {
     suffix=''
   fi
 
-  >&2 echo "DEBUG: \$1 = $1 ; \$method = $method ; \$suffix = $suffix"
+  debug "\$1 = $1 ; \$method = $method ; \$suffix = $suffix ; \$data = $2"
 
   curl \
     --location \
@@ -73,9 +77,9 @@ run_shellcheck() {
     -name ".zsh*" \
     -exec "shellcheck" "--format=json" {} \;
 
-  for ext in bash sh; do
+  for ext in bash sh zsh; do
     # shellcheck disable=SC2013
-    for file in $(grep -il "#\!\(/usr/bin/env \|/bin/\)$ext" --exclude-dir ".git" --exclude-dir "node_modules" --exclude "*.txt" --exclude "*.sh"); do
+    for file in $(grep -ilr "#\!\(/usr/bin/env \|/bin/\)$ext" --exclude-dir ".git" --exclude-dir "node_modules" --exclude "*.txt" --exclude "*.sh" .); do
       shellcheck --format=json --shell=$ext "$file"
     done
   done) | jq --slurp flatten
@@ -98,16 +102,24 @@ main() {
   # start check
   response="$(request "$url" "$json")"
 
-  id=$(echo "$response" | jq --raw-output .id)
+  id=$(jq --raw-output .id <<< "$response")
 
   if [ -z "$id" ] || [ "$id" = "null" ]; then
     exit 78
   fi
 
-  json=$(run_shellcheck | parse_json)
+  json="$(run_shellcheck | parse_json)"
+
+  debug "\$json = $json"
 
   # update check with results
   request "$url" "$json" "$id"
+
+  debug ".conclusion = $(jq --raw-output .conclusion <<< "$json")"
+
+  if [ "$(jq --raw-output .conclusion <<< "$json")" = "failure" ]; then
+    exit 1
+  fi
 }
 
 main "$@"
