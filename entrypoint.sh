@@ -23,11 +23,9 @@ parse_json() {
         path: (if .file | startswith("./") then .file[2:] else .file end),
         start_line: .line,
         end_line: .endLine,
-        start_column: (if .line != .endLine then null else .column end),
-        end_column: (if .line != .endLine then null else .endColumn end),
         annotation_level: (if .level == "info" or .level == "style" then "notice" elif .level == "error" then "failure" else .level end),
         message: .message
-      })
+      } + (if .line == .endLine then {start_column: .column, end_column: .endColumn} else {} end))
     }
   }'
 }
