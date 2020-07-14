@@ -12,6 +12,12 @@ if [ -z "$GITHUB_SHA" ]; then
 	exit 1
 fi
 
+debug() {
+  if [ "$DEBUG_ACTION" = "true" ]; then
+    >&2 echo "DEBUG: $@"
+  fi
+}
+
 parse_json() {
   jq --arg name "$GITHUB_ACTION" --arg now "$(timestamp)" '{
     completed_at: $now,
@@ -42,7 +48,7 @@ request() {
     suffix=''
   fi
 
-  >&2 echo "DEBUG: \$1 = $1 ; \$method = $method ; \$suffix = $suffix ; \$data = $2"
+  debug "\$1 = $1 ; \$method = $method ; \$suffix = $suffix ; \$data = $2"
 
   curl \
     --location \
@@ -102,17 +108,14 @@ main() {
     exit 78
   fi
 
-  output="$(run_shellcheck)"
-
   json="$(run_shellcheck | parse_json)"
 
-  >&2 echo "DEBUG: \$output = $output"
-  >&2 echo "DEBUG: \$json = $json"
+  debug "\$json = $json"
 
   # update check with results
   request "$url" "$json" "$id"
 
-  >&2 echo "DEBUG: conclusion = $(jq --raw-output .conclusion <<< "$json")"
+  debug ".conclusion = $(jq --raw-output .conclusion <<< "$json")"
 
   if [ "$(jq --raw-output .conclusion <<< "$json")" = "failure" ]; then
     exit 1
