@@ -26,7 +26,7 @@ parse_json() {
       title: $name,
       summary: map({level: .level}) | group_by(.level) | map({key: .[0].level, value: length}) | from_entries | "\(.error // 0) error(s) / \(.warning // 0) warning(s) / \(.info // 0) message(s)",
       annotations: map({
-        path: (if .file | startswith("./") then .file[2:] else .file end),
+        path: .file | ltrimstr("./"),
         start_line: .line,
         end_line: .endLine,
         annotation_level: (if .level == "info" or .level == "style" then "notice" elif .level == "error" then "failure" else .level end),
