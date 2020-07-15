@@ -3,13 +3,13 @@
 set -eo pipefail
 
 if [ -z "$GITHUB_TOKEN" ]; then
-	>&2 echo "Set the GITHUB_TOKEN env variable."
-	exit 1
+  >&2 echo "Set the GITHUB_TOKEN env variable."
+  exit 1
 fi
 
 if [ -z "$GITHUB_SHA" ]; then
-	>&2 echo "Set the GITHUB_SHA env variable."
-	exit 1
+  >&2 echo "Set the GITHUB_SHA env variable."
+  exit 1
 fi
 
 debug() {
@@ -67,14 +67,18 @@ request() {
 
 run_shellcheck() {
   (find . -type f \
-    -name "*.sh" -o \
-    -name ".bash*" -o \
-    -name ".ksh*" -o \
-    -name ".profile*" -o \
-    -name ".zlogin*" -o \
-    -name ".zlogout*" -o \
-    -name ".zprofile*" -o \
-    -name ".zsh*" \
+    \( \
+      -name "*.sh" -o \
+      -name ".bash*" -o \
+      -name ".ksh*" -o \
+      -name ".profile*" -o \
+      -name ".zlogin*" -o \
+      -name ".zlogout*" -o \
+      -name ".zprofile*" -o \
+      -name ".zsh*" \
+    \) \
+    -not -path './.git/*' \
+    -not -path './node_modules/*' \
     -exec "shellcheck" "--format=json" {} \;
 
   for ext in bash sh zsh; do
