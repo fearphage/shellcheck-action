@@ -1,9 +1,71 @@
-name: 'ShellCheck Action'
-author: 'fearphage <fearphage+shellcheck-action@gmail.com>'
-description: 'Check shell scripts using shellcheck'
-runs:
-  using: 'docker'
-  image: 'Dockerfile'
+name: ShellCheck Action
+author: fearphage <fearphage+shellcheck-action@gmail.com>
+description: Check shell scripts using shellcheck
+inputs:
+  ignore-files:
+    description: Scripts to ignore
+    required: false
+    default: ''
+  ignore-paths:
+    description: Paths to ignore when searching for shell scripts
+    required: false
+    default: ''
+  version:
+    description: Version of ShellCheck to use
+    required: false
+    default: stable
 branding:
-  icon: 'code'
-  color: 'red'
+  icon: code
+  color: red
+runs:
+  using: composite
+  steps:
+    - name: Download ShellCheck
+      shell: bash
+      env:
+        BASE_URL: https://github.com/koalaman/shellcheck/releases/download/${{ inputs.version }}/shellcheck-${{ inputs.version }}
+        INPUT_VERSION: ${{ inputs.version }}
+      run: |
+        if [ '${{ runner.os }}' = 'macOS' ]; then
+          ostype='darwin'
+        else
+          ostype='linux'
+        fi
+
+        mkdir bin
+        curl -Ls $BASE_URL.$ostype.$(arch).tar.xz | \
+          tar Jx --directory "$PWD/bin" --strip-components 1
+
+        echo "$PWD/bin" >> $GITHUB_PATH
+
+    - name: Setup ignore list
+      id: paths
+      shell: bash
+      env:
+        INPUT_IGNORE_FILES: ${{ inputs.ignore-files }}
+        INPUT_IGNORE_PATHS: ${{ inputs.ignore-paths }}
+      run: |
+        ignored=(
+          "-not -path './.git/*'"
+          "-not -path './node_modules/*'"
+        )
+
+        for file in $INPUT_IGNORE_FILES; do
+          ignored+=("-not -name '$file'")
+        done
+
+        for path in $INPUT_IGNORE_PATHS; do
+          ignored+=("-not -path '*/$path/*'")
+        done
+
+        echo ignored="${ignored[@]}" >> $GITHUB_OUTPUT
+
+    - run: echo '${{ github.action_path }}' >> $GITHUB_PATH
+      shell: bash
+    - name: Run ShellCheck
+      id: shellcheck
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        IGNORED_ARGS: ${{ steps.paths.outputs.ignored }}
+      run: entrypoint.sh
+      shell: bash

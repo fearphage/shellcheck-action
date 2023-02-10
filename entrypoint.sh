@@ -66,7 +66,25 @@ request() {
 }
 
 run_shellcheck() {
-  (find . -type f \
+  >&2 echo "find . \
+    $IGNORED_ARGS \
+    -type f \
+    \( \
+      -name "*.sh" -o \
+      -name ".bash*" -o \
+      -name ".ksh*" -o \
+      -name ".profile*" -o \
+      -name ".zlogin*" -o \
+      -name ".zlogout*" -o \
+      -name ".zprofile*" -o \
+      -name ".zsh*" \
+    \) \
+    -not -path './.git/*' \
+    -not -path './node_modules/*' \
+    -exec "shellcheck" "--format=json" {} \;"
+  (find . \
+    $IGNORED_ARGS \
+    -type f \
     \( \
       -name "*.sh" -o \
       -name ".bash*" -o \
