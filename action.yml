@@ -75,12 +75,12 @@ runs:
       run: |
         ignored=()
 
-        for file in $INPUT_IGNORE_FILES; do
-          ignored+=("-not -name '$file'")
-        done
-
         for path in $INPUT_BANNED_PATHS $INPUT_IGNORE_PATHS; do
           ignored+=("-not -path '*/$path/*'")
+        done
+
+        for file in $INPUT_IGNORE_FILES; do
+          ignored+=("-not -name '$file'")
         done
 
         echo commands="${ignored[@]}" >> $GITHUB_OUTPUT
@@ -123,7 +123,6 @@ runs:
     - shell: bash
       env:
         EXCLUDE_FILES_ARG: ${{ steps.exclude.outputs.commands }}
-        INCLUDE_FILES_ARG: ${{ steps.include.outputs.commands }}
         INPUT_TARGET_DIR: ${{ inputs.target-dir }}
       run: >
           find
