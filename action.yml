@@ -118,7 +118,7 @@ runs:
             -name ".zlogout*" -o \
             -name ".zprofile*" -o \
             -name ".zsh*" \
-            $INCLUDE_FILES_ARG
+            $INCLUDE_FILES_ARG \
           \) \
           -print0)
 
