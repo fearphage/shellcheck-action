@@ -2,6 +2,14 @@ name: ShellCheck Action
 author: fearphage <fearphage+shellcheck-action@gmail.com>
 description: Check shell scripts using shellcheck
 inputs:
+  dry-run:
+    description: Action stops after setup (does not run shellcheck)
+    required: false
+    default: false
+  include-files:
+    description: Additional files to include in scan
+    required: false
+    default: ''
   ignore-files:
     description: Scripts to ignore
     required: false
@@ -10,10 +18,21 @@ inputs:
     description: Paths to ignore when searching for shell scripts
     required: false
     default: ''
+  target-dir:
+    description: Path to start searching for scripts
+    required: false
+    default: '.'
   version:
     description: Version of ShellCheck to use
     required: false
     default: stable
+outpus:
+  exit-code:
+    description: ShellCheck exit code
+    value: ${{ steps.shellcheck.outputs.exit-code
+  scanned-files:
+    description: List of files ShellCheck scanned
+    value: ${{ steps.collector.outputs.files }}
 branding:
   icon: code
   color: red
@@ -39,7 +58,7 @@ runs:
         echo "$PWD/bin" >> $GITHUB_PATH
 
     - name: Setup ignore list
-      id: paths
+      id: exclude
       shell: bash
       env:
         INPUT_IGNORE_FILES: ${{ inputs.ignore-files }}
@@ -58,14 +77,73 @@ runs:
           ignored+=("-not -path '*/$path/*'")
         done
 
-        echo ignored="${ignored[@]}" >> $GITHUB_OUTPUT
+        echo files="${ignored[@]}" >> $GITHUB_OUTPUT
+
+    - name: Setup additional includes
+      id: include
+      shell: bash
+      env:
+        INPUT_INCLUDE_FILES: ${{ inputs.include-files }}
+      run: |
+        include=()
+
+        for file in $INPUT_INCLUDE_FILES; do
+          include+=("-o -name '$file'")
+        done
+
+        echo files="${include[@]}" >> $GITHUB_OUTPUT
+
+    - name: Collect files
+      id: collector
+      shell: bash
+      env:
+        EXCLUDE_FILES_ARG: ${{ steps.exclude.outputs.files }}
+        INCLUDE_FILES_ARG: ${{ steps.include.outputs.files }}
+        INPUT_TARGET_DIR: ${{ inputs.target-dir }}
+          REGEX
+      run: |
+        files=()
+
+        while IFS= read -r file; do
+          files+=("$file")
+        done < <(find \
+          "$INPUT_TARGET_DIR" \
+          $EXCLUDE_FILES_ARG \
+          -type f \
+          \( \
+            -name "*.sh" -o \
+            -name ".bash*" -o \
+            -name ".ksh*" -o \
+            -name ".profile*" -o \
+            -name ".zlogin*" -o \
+            -name ".zlogout*" -o \
+            -name ".zprofile*" -o \
+            -name ".zsh*" \
+            $INCLUDE_FILES_ARG
+          \) \
+          -print0)
+
+        regex='^#\!\s*\(/usr/bin/env \|/bin/\)[abkz]*sh'
+        while IFS= read -r file; do
+          if head --lines 1 "$file" | grep --extended-regex --quiet "$regex"; then
+            files+=("$file")
+          fi
+        done < <(find \
+          "$INPUT_TARGET_DIR" \
+          $EXCLUDE_FILES_ARG \
+          -type f \
+          -not -name '*.*' \
+          -print0)
+
+        echo files="${files[@]}" >> $GITHUB_OUTPUT
 
     - run: echo '${{ github.action_path }}' >> $GITHUB_PATH
       shell: bash
     - name: Run ShellCheck
       id: shellcheck
+      if: inputs.dry-run != true
       env:
+        FILES_ARG: ${{ steps.collector.outputs.files }}
         GITHUB_TOKEN: ${{ github.token }}
-        IGNORED_ARGS: ${{ steps.paths.outputs.ignored }}
       run: entrypoint.sh
       shell: bash
