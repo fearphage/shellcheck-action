@@ -105,15 +105,15 @@ runs:
         $EXCLUDE_FILES_ARG
         -type f
         \(
-          -name "*.sh" -o
-          -name ".bash*" -o
-          -name ".ksh*" -o
-          -name ".profile*" -o
-          -name ".zlogin*" -o
-          -name ".zlogout*" -o
-          -name ".zprofile*" -o
-          -name ".zsh*"
-          $INCLUDE_FILES_ARG
+        -name "*.sh" -o
+        -name ".bash*" -o
+        -name ".ksh*" -o
+        -name ".profile*" -o
+        -name ".zlogin*" -o
+        -name ".zlogout*" -o
+        -name ".zprofile*" -o
+        -name ".zsh*"
+        $INCLUDE_FILES_ARG
         \)
         run: >
           find
