@@ -129,7 +129,7 @@ runs:
           "$INPUT_TARGET_DIR"
           $EXCLUDE_FILES_ARG
           -type f
-          -not -name '*.*'
+          -not -name \'*.*\'
     - name: Collect files
       id: collector
       shell: bash
@@ -146,7 +146,7 @@ runs:
           "$INPUT_TARGET_DIR" \
           $EXCLUDE_FILES_ARG \
           -type f \
-          \( \
+          '(' \
             -name "*.sh" -o \
             -name ".bash*" -o \
             -name ".ksh*" -o \
@@ -156,14 +156,13 @@ runs:
             -name ".zprofile*" -o \
             -name ".zsh*" \
             $INCLUDE_FILES_ARG \
-          \) \
-          -print0)
+          ')')
 
         echo find \
           "$INPUT_TARGET_DIR" \
           $EXCLUDE_FILES_ARG \
           -type f \
-          \( \
+          '(' \
             -name "*.sh" -o \
             -name ".bash*" -o \
             -name ".ksh*" -o \
@@ -173,8 +172,7 @@ runs:
             -name ".zprofile*" -o \
             -name ".zsh*" \
             $INCLUDE_FILES_ARG \
-          \) \
-          -print0
+          ')'
 
         regex='^#\!\s*\(/usr/bin/env \|/bin/\)[abkz]*sh'
         while IFS= read -r file; do
@@ -185,15 +183,13 @@ runs:
           "$INPUT_TARGET_DIR" \
           $EXCLUDE_FILES_ARG \
           -type f \
-          -not -name '*.*' \
-          -print0)
+          -not -name \'*.*\')
 
         echo find \
           "$INPUT_TARGET_DIR" \
           $EXCLUDE_FILES_ARG \
           -type f \
-          -not -name '*.*' \
-          -print0
+          -not -name \'*.*\'
 
         echo files="${files[@]}" >> $GITHUB_OUTPUT
 
