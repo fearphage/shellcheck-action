@@ -66,44 +66,8 @@ request() {
 }
 
 run_shellcheck() {
-  >&2 echo "find . \
-    $IGNORED_ARGS \
-    -type f \
-    \( \
-      -name "*.sh" -o \
-      -name ".bash*" -o \
-      -name ".ksh*" -o \
-      -name ".profile*" -o \
-      -name ".zlogin*" -o \
-      -name ".zlogout*" -o \
-      -name ".zprofile*" -o \
-      -name ".zsh*" \
-    \) \
-    -not -path './.git/*' \
-    -not -path './node_modules/*' \
-    -exec "shellcheck" "--format=json" {} \;"
-  (find . \
-    $IGNORED_ARGS \
-    -type f \
-    \( \
-      -name "*.sh" -o \
-      -name ".bash*" -o \
-      -name ".ksh*" -o \
-      -name ".profile*" -o \
-      -name ".zlogin*" -o \
-      -name ".zlogout*" -o \
-      -name ".zprofile*" -o \
-      -name ".zsh*" \
-    \) \
-    -not -path './.git/*' \
-    -not -path './node_modules/*' \
-    -exec "shellcheck" "--format=json" {} \;
-
-  for ext in bash sh zsh; do
-    # shellcheck disable=SC2013
-    for file in $(grep -ilr "#\!\s*\(/usr/bin/env \|/bin/\)$ext" --exclude-dir ".git" --exclude-dir "node_modules" --exclude "*.txt" --exclude "*.sh" .); do
-      shellcheck --format=json --shell=$ext "$file"
-    done
+  (for file in $FILES_ARG;
+    shellcheck --format=json "$file"
   done) | jq --slurp flatten
 }
 
