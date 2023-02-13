@@ -37,7 +37,7 @@ outputs:
   exit-code:
     description: ShellCheck exit code
     value: ${{ steps.shellcheck.outputs.exit-code }}
-  scanned-files:
+  files:
     description: List of files ShellCheck scanned
     value: ${{ steps.collector.outputs.files }}
 branding:
