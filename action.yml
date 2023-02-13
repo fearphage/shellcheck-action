@@ -44,6 +44,7 @@ runs:
       env:
         BASE_URL: https://github.com/koalaman/shellcheck/releases/download/${{ inputs.version }}/shellcheck-${{ inputs.version }}
         INPUT_VERSION: ${{ inputs.version }}
+      if: inputs.dry-run != 'true'
       run: |
         if [ '${{ runner.os }}' = 'macOS' ]; then
           ostype='darwin'
@@ -77,7 +78,7 @@ runs:
           ignored+=("-not -path '*/$path/*'")
         done
 
-        echo files="${ignored[@]}" >> $GITHUB_OUTPUT
+        echo commands="${ignored[@]}" >> $GITHUB_OUTPUT
 
     - name: Setup additional includes
       id: include
@@ -91,14 +92,41 @@ runs:
           include+=("-o -name '$file'")
         done
 
-        echo files="${include[@]}" >> $GITHUB_OUTPUT
+        echo commands="${include[@]}" >> $GITHUB_OUTPUT
 
+    - shell: bash
+      env:
+        EXCLUDE_FILES_ARG: ${{ steps.exclude.outputs.commands }}
+        INCLUDE_FILES_ARG: ${{ steps.include.outputs.commands }}
+        INPUT_TARGET_DIR: ${{ inputs.target-dir }}
+      run: >
+        find
+        "$INPUT_TARGET_DIR"
+        $EXCLUDE_FILES_ARG
+        -type f
+        \(
+          -name "*.sh" -o
+          -name ".bash*" -o
+          -name ".ksh*" -o
+          -name ".profile*" -o
+          -name ".zlogin*" -o
+          -name ".zlogout*" -o
+          -name ".zprofile*" -o
+          -name ".zsh*"
+          $INCLUDE_FILES_ARG
+        \)
+        run: >
+          find
+          "$INPUT_TARGET_DIR"
+          $EXCLUDE_FILES_ARG
+          -type f
+          -not -name '*.*'
     - name: Collect files
       id: collector
       shell: bash
       env:
-        EXCLUDE_FILES_ARG: ${{ steps.exclude.outputs.files }}
-        INCLUDE_FILES_ARG: ${{ steps.include.outputs.files }}
+        EXCLUDE_FILES_ARG: ${{ steps.exclude.outputs.commands }}
+        INCLUDE_FILES_ARG: ${{ steps.include.outputs.commands }}
         INPUT_TARGET_DIR: ${{ inputs.target-dir }}
       run: |
         files=()
@@ -143,6 +171,5 @@ runs:
       if: inputs.dry-run != 'true'
       env:
         FILES_ARG: ${{ steps.collector.outputs.files }}
-        GITHUB_TOKEN: ${{ github.token }}
       run: entrypoint.sh
       shell: bash
