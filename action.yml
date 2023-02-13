@@ -69,7 +69,7 @@ runs:
       id: exclude
       shell: bash
       env:
-        INPUT_BANNED_PATHS: ${{ input.banned-paths }}
+        INPUT_BANNED_PATHS: ${{ inputs.banned-paths }}
         INPUT_IGNORE_FILES: ${{ inputs.ignore-files }}
         INPUT_IGNORE_PATHS: ${{ inputs.ignore-paths }}
       run: |
