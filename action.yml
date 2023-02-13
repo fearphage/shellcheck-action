@@ -140,7 +140,7 @@ runs:
       shell: bash
     - name: Run ShellCheck
       id: shellcheck
-      if: inputs.dry-run != true
+      if: inputs.dry-run != 'true'
       env:
         FILES_ARG: ${{ steps.collector.outputs.files }}
         GITHUB_TOKEN: ${{ github.token }}
