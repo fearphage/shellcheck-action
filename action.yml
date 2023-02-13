@@ -104,7 +104,7 @@ runs:
         "$INPUT_TARGET_DIR"
         $EXCLUDE_FILES_ARG
         -type f
-        \(
+        '('
         -name "*.sh" -o
         -name ".bash*" -o
         -name ".ksh*" -o
@@ -114,8 +114,13 @@ runs:
         -name ".zprofile*" -o
         -name ".zsh*"
         $INCLUDE_FILES_ARG
-        \)
-        run: >
+        ')'
+    - shell: bash
+      env:
+        EXCLUDE_FILES_ARG: ${{ steps.exclude.outputs.commands }}
+        INCLUDE_FILES_ARG: ${{ steps.include.outputs.commands }}
+        INPUT_TARGET_DIR: ${{ inputs.target-dir }}
+      run: >
           find
           "$INPUT_TARGET_DIR"
           $EXCLUDE_FILES_ARG
