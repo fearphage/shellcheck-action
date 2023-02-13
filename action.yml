@@ -2,6 +2,13 @@ name: ShellCheck Action
 author: fearphage <fearphage+shellcheck-action@gmail.com>
 description: Check shell scripts using shellcheck
 inputs:
+  banned-paths:
+    description: Paths to avoid searching
+    required: false
+    default: >-
+      .git
+      .vscode
+      node_modules
   dry-run:
     description: Action stops after setup (does not run shellcheck)
     required: false
@@ -62,19 +69,17 @@ runs:
       id: exclude
       shell: bash
       env:
+        INPUT_BANNED_PATHS: ${{ input.banned-paths }}
         INPUT_IGNORE_FILES: ${{ inputs.ignore-files }}
         INPUT_IGNORE_PATHS: ${{ inputs.ignore-paths }}
       run: |
-        ignored=(
-          "-not -path './.git/*'"
-          "-not -path './node_modules/*'"
-        )
+        ignored=()
 
         for file in $INPUT_IGNORE_FILES; do
           ignored+=("-not -name '$file'")
         done
 
-        for path in $INPUT_IGNORE_PATHS; do
+        for path in $INPUT_BANNED_PATHS $INPUT_IGNORE_PATHS; do
           ignored+=("-not -path '*/$path/*'")
         done
 
@@ -155,6 +160,23 @@ runs:
           \) \
           -print0)
 
+        echo find \
+          "$INPUT_TARGET_DIR" \
+          $EXCLUDE_FILES_ARG \
+          -type f \
+          \( \
+            -name "*.sh" -o \
+            -name ".bash*" -o \
+            -name ".ksh*" -o \
+            -name ".profile*" -o \
+            -name ".zlogin*" -o \
+            -name ".zlogout*" -o \
+            -name ".zprofile*" -o \
+            -name ".zsh*" \
+            $INCLUDE_FILES_ARG \
+          \) \
+          -print0
+
         regex='^#\!\s*\(/usr/bin/env \|/bin/\)[abkz]*sh'
         while IFS= read -r file; do
           if head --lines 1 "$file" | grep --extended-regex --quiet "$regex"; then
@@ -166,6 +188,13 @@ runs:
           -type f \
           -not -name '*.*' \
           -print0)
+
+        echo find \
+          "$INPUT_TARGET_DIR" \
+          $EXCLUDE_FILES_ARG \
+          -type f \
+          -not -name '*.*' \
+          -print0
 
         echo files="${files[@]}" >> $GITHUB_OUTPUT
 
