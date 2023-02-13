@@ -26,7 +26,7 @@ inputs:
     description: Version of ShellCheck to use
     required: false
     default: stable
-outpus:
+outputs:
   exit-code:
     description: ShellCheck exit code
     value: ${{ steps.shellcheck.outputs.exit-code }}
