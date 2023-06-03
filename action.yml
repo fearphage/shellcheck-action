@@ -12,7 +12,7 @@ inputs:
   dry-run:
     description: Action stops after setup (does not run shellcheck)
     required: false
-    default: false
+    default: 'false'
   include-files:
     description: Additional files to include in scan
     required: false
@@ -46,12 +46,19 @@ branding:
 runs:
   using: composite
   steps:
+    - name: Cache Binaries
+      id: cache-bin
+      uses: actions/cache@v3
+      with:
+        key: ${{ runner.os }}-binary-${{ inputs.version }}
+        path: bin
+
     - name: Download ShellCheck
       shell: bash
       env:
         BASE_URL: https://github.com/koalaman/shellcheck/releases/download/${{ inputs.version }}/shellcheck-${{ inputs.version }}
         INPUT_VERSION: ${{ inputs.version }}
-      if: inputs.dry-run != 'true'
+      if: inputs.dry-run != 'true' && steps.cache-bin.outputs.cache-hit != 'true'
       run: |
         if [ '${{ runner.os }}' = 'macOS' ]; then
           ostype='darwin'
@@ -62,8 +69,6 @@ runs:
         mkdir bin
         curl -Ls $BASE_URL.$ostype.$(arch).tar.xz | \
           tar Jx --directory "$PWD/bin" --strip-components 1
-
-        echo "$PWD/bin" >> $GITHUB_PATH
 
     - name: Setup ignore list
       id: exclude
@@ -193,12 +198,10 @@ runs:
 
         echo files="${files[@]}" >> $GITHUB_OUTPUT
 
-    - run: echo '${{ github.action_path }}' >> $GITHUB_PATH
-      shell: bash
     - name: Run ShellCheck
       id: shellcheck
       if: inputs.dry-run != 'true'
       env:
         FILES_ARG: ${{ steps.collector.outputs.files }}
-      run: entrypoint.sh
+      run: bin/entrypoint.sh
       shell: bash
