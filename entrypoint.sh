@@ -66,7 +66,7 @@ request() {
 }
 
 run_shellcheck() {
-  (for file in $FILES_ARG;
+  (for file in $FILES_ARG; do
     shellcheck --format=json "$file"
   done) | jq --slurp flatten
 }
