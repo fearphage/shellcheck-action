@@ -11,3 +11,5 @@ jobs:
 
       - name: ShellCheck Action
         uses: fearphage/shellcheck-action@master
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
