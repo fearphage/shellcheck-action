@@ -29,6 +29,10 @@ inputs:
     description: Path to start searching for scripts
     required: false
     default: '.'
+  token:
+    description: Token to use for GitHub checks
+    required: true
+    default: ${{ github.token }}
   version:
     description: Version of ShellCheck to use
     required: false
@@ -203,5 +207,6 @@ runs:
       if: inputs.dry-run != 'true'
       env:
         FILES_ARG: ${{ steps.collector.outputs.files }}
+        GITHUB_TOKEN: ${{ inputs.token }}
       run: bin/entrypoint.sh
       shell: bash
