@@ -57,7 +57,6 @@ request() {
     --connect-timeout 5 \
     --max-time 5 \
     --request "$method" \
-    --header 'Accept: application/vnd.github.antiope-preview+json' \
     --header "Authorization: token ${GITHUB_TOKEN}" \
     --header 'Content-Type: application/json' \
     --header 'User-Agent: github-actions' \
